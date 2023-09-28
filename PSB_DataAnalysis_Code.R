@@ -126,12 +126,12 @@ p3 = ggplot(data = load_vals, aes(x = Chemical, y = Load_PC1)) +
   theme_bw() +
   xlab("") +
   ylab("PC1 Loading") +
-  theme(axis.title = element_text(size = 13), axis.text.x = element_text(size = 11, angle = 90, hjust = 1, vjust = 0.5), legend.title = element_text(size = 13), legend.text = element_text(size = 11))
+  theme(axis.title = element_text(size = 13), axis.text.x = element_text(size = 11, angle = 90, hjust = 1, vjust = 0.5), legend.title = element_text(size = 13), legend.text = element_text(size = 11), legend.position = "bottom")
 
 # arrange the plots #
-ggpubr::ggarrange(ggpubr::ggarrange(p1, p2, ncol = 2, common.legend = T, legend = "right", labels = "AUTO"), p3, ncol = 1, nrow = 2, labels = c("", "C"))
+ggpubr::ggarrange(ggpubr::ggarrange(p1, p2, ncol = 2, common.legend = T, legend = "right", labels = "AUTO"), p3, ncol = 1, nrow = 2, labels = c("", "C"), vjust = -1.2)
 
-ggsave("/Users/bram489/Desktop/Fig1.pdf", width = 7, height = 5, units = "in")
+ggsave("/Users/bram489/Desktop/Fig1.png", width = 7, height = 6, units = "in")
 
 
 #### Figure 2 ####
@@ -445,7 +445,7 @@ for(i in 1:25){
   
 }
 
-ny_z_samp2 = do.call(rbind, ny_z_samp2)
+ny_z_samp2 = do.call(rbind, ny_z_samp2) 
 ggplot(data = ny_z, aes(x = value)) +
   geom_density(data = ny_z_samp2, aes(x = value, group = factor(Sample), color = Sample)) +
   geom_density(color = "red", size = 2) +
@@ -455,3 +455,22 @@ ggplot(data = ny_z, aes(x = value)) +
   theme(axis.text = element_text(size= 11), axis.title = element_text(size = 13)) +
   guides(color = "none")
 
+#### Figure 6 ####
+
+# subset to NY and OR data #
+nyor_data = nested_data2 %>% filter(Study %in% c("NY", "OR")) %>% select(Study, log_half_LOD_transform) %>% unnest(log_half_LOD_transform)
+
+# subset to chemCB
+chm_cb_sub = nyor_data %>% filter(ChemID == "chemCB")
+
+# calculate tertile values #
+threshs = chm_cb_sub %>% summarise(T1 = quantile(Log2_PicoMoles, 1/3, na.rm = T), T2 = quantile(Log2_PicoMoles, 2/3, na.rm = T))
+
+ggplot(data = chm_cb_sub, aes(x = Log2_PicoMoles, color = Study, group = Study)) +
+  stat_ecdf(linewidth = 1.25) +
+  geom_hline(yintercept = 1/3, col = "darkgrey", lty = 2) +
+  geom_hline(yintercept = 2/3, col = "darkgrey", lty = 2) +
+  theme_bw() +
+  xlab("Log2 Concentration") +
+  ylab("Percentile") +
+  theme(axis.text = element_text(size = 11), axis.title = element_text(size = 13), legend.text = element_text(size = 11), legend.title = element_text(size = 13))
